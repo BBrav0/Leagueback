@@ -97,6 +97,7 @@ export default function Component() {
       if (clientInfo.isAvailable) {
         setGameName(clientInfo.gameName);
         setTagLine(clientInfo.tagLine);
+        setShowManualInput(false);
         handleSearchWithInfo(clientInfo.gameName, clientInfo.tagLine);
       } else {
         setShowManualInput(true);
@@ -105,6 +106,21 @@ export default function Component() {
 
     checkLeagueClient();
   }, []);
+
+  // Periodically re-check if League client becomes available
+  useEffect(() => {
+    if (!showManualInput) return;
+    const interval = setInterval(async () => {
+      const clientInfo = await BackendBridge.getLeagueClientInfo();
+      if (clientInfo.isAvailable) {
+        setGameName(clientInfo.gameName);
+        setTagLine(clientInfo.tagLine);
+        setShowManualInput(false);
+        handleSearchWithInfo(clientInfo.gameName, clientInfo.tagLine);
+      }
+    }, 5000); // Check every 5 seconds
+    return () => clearInterval(interval);
+  }, [showManualInput]);
 
   const handleSearchWithInfo = async (name: string, tag: string) => {
     if (!name || !tag) {
@@ -155,7 +171,7 @@ export default function Component() {
             <CardHeader>
               <CardTitle className="text-white">Enter Summoner Information</CardTitle>
               <CardDescription className="text-slate-300">
-                League client not detected. Please enter your Riot ID manually
+                League client not detected. Please launch the client or enter your Riot ID manually
               </CardDescription>
             </CardHeader>
             <CardContent>

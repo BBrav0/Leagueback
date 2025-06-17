@@ -23,6 +23,8 @@ out/
 storybook-static/
 *.tsbuildinfo
 
+.vs
+
 # Backend specific
 *.pyc
 __pycache__/

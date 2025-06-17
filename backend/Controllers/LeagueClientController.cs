@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.IO;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
+using backend; // Add this at the top for PlayerCache
 
 namespace backend.Controllers
 {
@@ -30,9 +31,21 @@ namespace backend.Controllers
 
             if (leagueProcess == null)
             {
-                Console.WriteLine("League of Legends process not found");
-                _logger.LogWarning("League of Legends process not found.");
-                return NotFound(new { message = "League of Legends process not found." });
+                // Try to load from cache
+                var cache = await PlayerCache.LoadCacheDataAsync();
+                if (PlayerCache.IsCacheValid(cache))
+                {
+                    Console.WriteLine("Returning cached player info");
+                    return Ok(new {
+                        gameName = cache.GameName,
+                        tagLine = cache.TagLine,
+                        isAvailable = true,
+                        fromCache = true
+                    });
+                }
+                Console.WriteLine("League of Legends process not found and no valid cache");
+                _logger.LogWarning("League of Legends process not found and no valid cache.");
+                return NotFound(new { message = "League of Legends process not found and no valid cache." });
             }
 
             Console.WriteLine($"Found League process: {leagueProcess.ProcessName}");
@@ -105,12 +118,22 @@ namespace backend.Controllers
                     Console.WriteLine($"Received summoner data: {summonerData}");
 
                     var summoner = JsonSerializer.Deserialize<JsonElement>(summonerData);
+                    var gameName = summoner.GetProperty("gameName").GetString();
+                    var tagLine = summoner.GetProperty("tagLine").GetString();
+
+                    // Save to cache
+                    await PlayerCache.SaveCacheDataAsync(
+                        summoner.GetProperty("puuid").GetString() ?? string.Empty,
+                        gameName ?? string.Empty,
+                        tagLine ?? string.Empty
+                    );
 
                     return Ok(new
                     {
-                        gameName = summoner.GetProperty("gameName").GetString(),
-                        tagLine = summoner.GetProperty("tagLine").GetString(),
-                        isAvailable = true
+                        gameName = gameName,
+                        tagLine = tagLine,
+                        isAvailable = true,
+                        fromCache = false
                     });
                 }
             }
