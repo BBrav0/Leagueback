@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
 import {
   ChartContainer,
@@ -10,89 +11,13 @@ import {
 } from "@/components/ui/chart"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { BackendBridge, MatchSummary } from "@/lib/bridge"
 
-const matchesData = [
-  {
-    id: 1,
-    summonerName: "RiftMaster2024",
-    champion: "Azir the Emperor",
-    rank: "Gold II",
-    kda: "12/3/8",
-    cs: 245,
-    visionScore: 32,
-    gameResult: "Victory",
-    gameTime: "34:12",
-    data: [
-      { minute: 1, yourImpact: -5, teamImpact: 2 },
-      { minute: 5, yourImpact: 15, teamImpact: -8 },
-      { minute: 10, yourImpact: 25, teamImpact: 12 },
-      { minute: 14, yourImpact: 35, teamImpact: 18 },
-      { minute: 20, yourImpact: 45, teamImpact: 28 },
-      { minute: 30, yourImpact: 65, teamImpact: 42 },
-      { minute: 35, yourImpact: 78, teamImpact: 55 },
-    ],
-  },
-  {
-    id: 2,
-    summonerName: "ShadowStrike99",
-    champion: "Zed the Master of Shadows",
-    rank: "Gold II",
-    kda: "8/7/4",
-    cs: 198,
-    visionScore: 18,
-    gameResult: "Defeat",
-    gameTime: "28:45",
-    data: [
-      { minute: 1, yourImpact: 3, teamImpact: -2 },
-      { minute: 5, yourImpact: -12, teamImpact: -15 },
-      { minute: 10, yourImpact: -8, teamImpact: -22 },
-      { minute: 14, yourImpact: 5, teamImpact: -18 },
-      { minute: 20, yourImpact: 12, teamImpact: -25 },
-      { minute: 30, yourImpact: -5, teamImpact: -35 },
-      { minute: 35, yourImpact: -15, teamImpact: -42 },
-    ],
-  },
-  {
-    id: 3,
-    summonerName: "FrostGuardian",
-    champion: "Sejuani the Winter's Wrath",
-    rank: "Gold II",
-    kda: "2/4/18",
-    cs: 156,
-    visionScore: 45,
-    gameResult: "Victory",
-    gameTime: "41:23",
-    data: [
-      { minute: 1, yourImpact: -8, teamImpact: -3 },
-      { minute: 5, yourImpact: -5, teamImpact: 8 },
-      { minute: 10, yourImpact: 12, teamImpact: 22 },
-      { minute: 14, yourImpact: 28, teamImpact: 35 },
-      { minute: 20, yourImpact: 42, teamImpact: 48 },
-      { minute: 30, yourImpact: 58, teamImpact: 62 },
-      { minute: 35, yourImpact: 72, teamImpact: 78 },
-    ],
-  },
-  {
-    id: 4,
-    summonerName: "ArcaneMystic",
-    champion: "Syndra the Dark Sovereign",
-    rank: "Gold II",
-    kda: "15/2/6",
-    cs: 287,
-    visionScore: 28,
-    gameResult: "Victory",
-    gameTime: "26:18",
-    data: [
-      { minute: 1, yourImpact: 8, teamImpact: 5 },
-      { minute: 5, yourImpact: 22, teamImpact: 12 },
-      { minute: 10, yourImpact: 45, teamImpact: 25 },
-      { minute: 14, yourImpact: 62, teamImpact: 38 },
-      { minute: 20, yourImpact: 85, teamImpact: 52 },
-      { minute: 30, yourImpact: 95, teamImpact: 68 },
-      { minute: 35, yourImpact: 98, teamImpact: 72 },
-    ],
-  },
-]
+// Removed static data - now using real backend data
 
 const chartConfig = {
   yourImpact: {
@@ -105,7 +30,7 @@ const chartConfig = {
   },
 }
 
-function MatchChart({ data }: { data: (typeof matchesData)[0]["data"] }) {
+function MatchChart({ data }: { data: MatchSummary["data"] }) {
   return (
     <ChartContainer config={chartConfig} className="h-[200px] w-full">
       <LineChart
@@ -158,6 +83,43 @@ function MatchChart({ data }: { data: (typeof matchesData)[0]["data"] }) {
 }
 
 export default function Component() {
+  const [matchesData, setMatchesData] = useState<MatchSummary[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [gameName, setGameName] = useState("");
+  const [tagLine, setTagLine] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
+
+  const handleSearch = async () => {
+    if (!gameName || !tagLine) {
+      setError("Please enter both game name and tag line");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setHasSearched(true);
+
+    try {
+      const matches = await BackendBridge.getPlayerMatchData(gameName, tagLine, 5);
+      setMatchesData(matches);
+      if (matches.length === 0) {
+        setError("No matches found for this player");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch match data");
+      setMatchesData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-purple-900 to-blue-900 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -167,36 +129,116 @@ export default function Component() {
           <p className="text-blue-200">Performance Timeline & Impact Analysis</p>
         </div>
 
+        {/* Search Form */}
+        <Card className="bg-slate-800/50 border-slate-600/50">
+          <CardHeader>
+            <CardTitle className="text-white">Enter Summoner Information</CardTitle>
+            <CardDescription className="text-slate-300">
+              Enter your Riot ID to analyze your recent match performance
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4 items-end">
+              <div className="flex-1">
+                <Label htmlFor="gameName" className="text-white">Game Name</Label>
+                <Input
+                  id="gameName"
+                  value={gameName}
+                  onChange={(e) => setGameName(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Enter game name"
+                  className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
+                />
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="tagLine" className="text-white">Tag Line</Label>
+                <Input
+                  id="tagLine"
+                  value={tagLine}
+                  onChange={(e) => setTagLine(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Enter tag line (e.g., NA1)"
+                  className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
+                />
+              </div>
+              <Button 
+                onClick={handleSearch} 
+                disabled={loading || !gameName || !tagLine}
+                className="px-8"
+              >
+                {loading ? "Loading..." : "Analyze"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Error Display */}
+        {error && (
+          <Alert className="bg-red-900/50 border-red-600">
+            <AlertDescription className="text-red-200">
+              {error}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Loading State */}
+        {loading && (
+          <Card className="bg-slate-800/50 border-slate-600/50">
+            <CardContent className="p-8 text-center">
+              <div className="text-white text-lg">Analyzing matches...</div>
+              <div className="text-slate-300 text-sm mt-2">This may take a few moments</div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Match List */}
-        <div className="space-y-6">
-          {matchesData.map((match) => (
-            <Card key={match.id} className="bg-slate-800/50 border-slate-600/50">
-              <CardHeader>
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle className="text-white flex items-center gap-3">
-                      {match.champion}
-                      <Badge variant={match.gameResult === "Victory" ? "default" : "destructive"}>
-                        {match.gameResult}
-                      </Badge>
-                    </CardTitle>
-                    
+        {hasSearched && !loading && matchesData.length > 0 && (
+          <div className="space-y-6">
+            {matchesData.map((match) => (
+              <Card key={match.id} className="bg-slate-800/50 border-slate-600/50">
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <CardTitle className="text-white flex items-center gap-3">
+                        {match.champion}
+                        <Badge variant={match.gameResult === "Victory" ? "default" : "destructive"}>
+                          {match.gameResult}
+                        </Badge>
+                      </CardTitle>
+                      <CardDescription className="text-slate-300 mt-1">
+                        {match.summonerName} • {match.gameTime} • KDA: {match.kda}
+                      </CardDescription>
+                    </div>
+                    <div className="text-right space-y-1">
+                      <div className="text-slate-300 text-sm">
+                        CS: {match.cs} • Vision: {match.visionScore}
+                      </div>
+                      <div className="text-slate-400 text-xs">
+                        {match.rank}
+                      </div>
+                    </div>
                   </div>
-                  <div className="text-right space-y-1">
-                    
-                    
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="text-slate-300 text-sm font-medium">Performance Timeline</div>
+                    <MatchChart data={match.data} />
                   </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  
-                  <MatchChart data={match.data} />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* No Data State */}
+        {hasSearched && !loading && matchesData.length === 0 && !error && (
+          <Card className="bg-slate-800/50 border-slate-600/50">
+            <CardContent className="p-8 text-center">
+              <div className="text-slate-300 text-lg">No match data found</div>
+              <div className="text-slate-400 text-sm mt-2">Try a different summoner name or check your spelling</div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

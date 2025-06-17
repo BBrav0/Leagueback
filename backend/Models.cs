@@ -87,6 +87,51 @@ namespace backend.Models
         public TimelineInfoDto Info { get; set; } = new();
     }
 
+    // DTOs for Frontend Integration
+    public class ChartDataPoint
+    {
+        [JsonPropertyName("minute")]
+        public int Minute { get; set; }
+        [JsonPropertyName("yourImpact")]
+        public double YourImpact { get; set; }
+        [JsonPropertyName("teamImpact")]
+        public double TeamImpact { get; set; }
+    }
+
+    public class MatchSummary
+    {
+        [JsonPropertyName("id")]
+        public string Id { get; set; } = string.Empty;
+        [JsonPropertyName("summonerName")]
+        public string SummonerName { get; set; } = string.Empty;
+        [JsonPropertyName("champion")]
+        public string Champion { get; set; } = string.Empty;
+        [JsonPropertyName("rank")]
+        public string Rank { get; set; } = "Unranked";
+        [JsonPropertyName("kda")]
+        public string KDA { get; set; } = string.Empty;
+        [JsonPropertyName("cs")]
+        public int CS { get; set; }
+        [JsonPropertyName("visionScore")]
+        public int VisionScore { get; set; }
+        [JsonPropertyName("gameResult")]
+        public string GameResult { get; set; } = string.Empty;
+        [JsonPropertyName("gameTime")]
+        public string GameTime { get; set; } = string.Empty;
+        [JsonPropertyName("data")]
+        public List<ChartDataPoint> Data { get; set; } = new();
+    }
+
+    public class PerformanceAnalysisResult
+    {
+        [JsonPropertyName("success")]
+        public bool Success { get; set; }
+        [JsonPropertyName("matchSummary")]
+        public MatchSummary? MatchSummary { get; set; }
+        [JsonPropertyName("error")]
+        public string? Error { get; set; }
+    }
+
     public class TimelineInfoDto
     {
         [JsonPropertyName("frames")]
