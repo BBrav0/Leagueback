@@ -47,6 +47,12 @@ export interface PerformanceAnalysisResult {
   error?: string;
 }
 
+export interface LeagueClientInfo {
+  gameName: string;
+  tagLine: string;
+  isAvailable: boolean;
+}
+
 export class BackendBridge {
   private static isWebView2Available(): boolean {
     return typeof window !== 'undefined' && 
@@ -153,6 +159,22 @@ export class BackendBridge {
     } catch (error) {
       console.error('Error getting player match data:', error);
       throw error;
+    }
+  }
+
+  static async getLeagueClientInfo(): Promise<LeagueClientInfo> {
+    try {
+      const response = await fetch('/api/LeagueClient/league-client-info');
+      if (!response.ok) {
+        throw new Error('Failed to get League client info');
+      }
+      return await response.json();
+    } catch (error) {
+      return {
+        gameName: '',
+        tagLine: '',
+        isAvailable: false
+      };
     }
   }
 }

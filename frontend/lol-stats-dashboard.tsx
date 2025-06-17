@@ -89,9 +89,25 @@ export default function Component() {
   const [gameName, setGameName] = useState("");
   const [tagLine, setTagLine] = useState("");
   const [hasSearched, setHasSearched] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
 
-  const handleSearch = async () => {
-    if (!gameName || !tagLine) {
+  useEffect(() => {
+    const checkLeagueClient = async () => {
+      const clientInfo = await BackendBridge.getLeagueClientInfo();
+      if (clientInfo.isAvailable) {
+        setGameName(clientInfo.gameName);
+        setTagLine(clientInfo.tagLine);
+        handleSearchWithInfo(clientInfo.gameName, clientInfo.tagLine);
+      } else {
+        setShowManualInput(true);
+      }
+    };
+
+    checkLeagueClient();
+  }, []);
+
+  const handleSearchWithInfo = async (name: string, tag: string) => {
+    if (!name || !tag) {
       setError("Please enter both game name and tag line");
       return;
     }
@@ -101,7 +117,7 @@ export default function Component() {
     setHasSearched(true);
 
     try {
-      const matches = await BackendBridge.getPlayerMatchData(gameName, tagLine, 5);
+      const matches = await BackendBridge.getPlayerMatchData(name, tag, 5);
       setMatchesData(matches);
       if (matches.length === 0) {
         setError("No matches found for this player");
@@ -112,6 +128,10 @@ export default function Component() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = () => {
+    handleSearchWithInfo(gameName, tagLine);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -129,48 +149,50 @@ export default function Component() {
           <p className="text-blue-200">Performance Timeline & Impact Analysis</p>
         </div>
 
-        {/* Search Form */}
-        <Card className="bg-slate-800/50 border-slate-600/50">
-          <CardHeader>
-            <CardTitle className="text-white">Enter Summoner Information</CardTitle>
-            <CardDescription className="text-slate-300">
-              Enter your Riot ID to analyze your recent match performance
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4 items-end">
-              <div className="flex-1">
-                <Label htmlFor="gameName" className="text-white">Game Name</Label>
-                <Input
-                  id="gameName"
-                  value={gameName}
-                  onChange={(e) => setGameName(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Enter game name"
-                  className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
-                />
+        {/* Search Form - Only show if manual input is needed */}
+        {showManualInput && (
+          <Card className="bg-slate-800/50 border-slate-600/50">
+            <CardHeader>
+              <CardTitle className="text-white">Enter Summoner Information</CardTitle>
+              <CardDescription className="text-slate-300">
+                League client not detected. Please enter your Riot ID manually
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-4 items-end">
+                <div className="flex-1">
+                  <Label htmlFor="gameName" className="text-white">Game Name</Label>
+                  <Input
+                    id="gameName"
+                    value={gameName}
+                    onChange={(e) => setGameName(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Enter game name"
+                    className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label htmlFor="tagLine" className="text-white">Tag Line</Label>
+                  <Input
+                    id="tagLine"
+                    value={tagLine}
+                    onChange={(e) => setTagLine(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Enter tag line (e.g., NA1)"
+                    className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
+                  />
+                </div>
+                <Button 
+                  onClick={handleSearch} 
+                  disabled={loading || !gameName || !tagLine}
+                  className="px-8"
+                >
+                  {loading ? "Loading..." : "Analyze"}
+                </Button>
               </div>
-              <div className="flex-1">
-                <Label htmlFor="tagLine" className="text-white">Tag Line</Label>
-                <Input
-                  id="tagLine"
-                  value={tagLine}
-                  onChange={(e) => setTagLine(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Enter tag line (e.g., NA1)"
-                  className="bg-slate-700 border-slate-600 text-white placeholder-slate-400"
-                />
-              </div>
-              <Button 
-                onClick={handleSearch} 
-                disabled={loading || !gameName || !tagLine}
-                className="px-8"
-              >
-                {loading ? "Loading..." : "Analyze"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Error Display */}
         {error && (

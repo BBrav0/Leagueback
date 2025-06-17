@@ -9,7 +9,7 @@ namespace backend
     {
         private static readonly string CacheFilePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "LoLFeedbackApp",
+            "Leagueback",
             "player_cache.json"
         );
 
