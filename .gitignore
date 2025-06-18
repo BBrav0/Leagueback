@@ -144,3 +144,13 @@ nunit-*.xml
 *.swp
 *~.nib
 local.properties
+#supabase
+
+# Supabase
+.branches
+.temp
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local

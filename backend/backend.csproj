@@ -45,8 +45,8 @@
     <Copyright>© 2025 Ben Bravo</Copyright>
 
     <!-- Versioning -->
-    <InformationalVersion>0.2.7</InformationalVersion>
-    <FileVersion>0.2.7</FileVersion>
+    <InformationalVersion>0.2.9</InformationalVersion>
+    <FileVersion>0.2.9</FileVersion>
 
     <ApplicationIcon>assets\icon.ico</ApplicationIcon>
   </PropertyGroup>

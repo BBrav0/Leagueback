@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Tasks;
 using backend.Models; // Or the namespace where your Models.cs file is
+using System.Net.Http;
 
 namespace backend // This should be your project's namespace
 {
@@ -13,17 +14,53 @@ namespace backend // This should be your project's namespace
     {
         private readonly RiotApiService? _riotApiService;
 
+        // Supabase Edge Function that returns the Riot API key stored as a secret
+        private const string SUPABASE_FUNCTION_URL = "https://ucbsqhyoerxkvjhuirfo.functions.supabase.co/riot-proxy";
+        // Public anon key (safe to embed)
+        private const string SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVjYnNxaHlvZXJ4a3ZqaHVpcmZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyNzYyMjEsImV4cCI6MjA2NTg1MjIyMX0.a85ZF8TXqBGSVizzkCjQwWflkUSgiZutHelEy8ru5D4";
+        private static readonly HttpClient _httpClient = new HttpClient();
+
         public BackendApiBridge()
         {
-            string apiKey = Environment.GetEnvironmentVariable("RIOT_API_KEY") ?? "YOUR_RIOT_API_KEY_HERE";
+            // Attempt to retrieve the key from Supabase first
+            string apiKey = FetchApiKeyFromSupabase();
 
-            if (string.IsNullOrEmpty(apiKey) || apiKey == "YOUR_RIOT_API_KEY_HERE")
+            // Fallback to environment variable if the call fails (helps during dev)
+            if (string.IsNullOrEmpty(apiKey))
+            {
+                apiKey = Environment.GetEnvironmentVariable("RIOT_API_KEY") ?? string.Empty;
+            }
+
+            if (string.IsNullOrEmpty(apiKey))
             {
                 _riotApiService = null;
                 return;
             }
 
             _riotApiService = new RiotApiService(apiKey);
+        }
+
+        private static string FetchApiKeyFromSupabase()
+        {
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, SUPABASE_FUNCTION_URL);
+                request.Headers.Add("apikey", SUPABASE_ANON_KEY);
+                request.Headers.Add("Authorization", $"Bearer {SUPABASE_ANON_KEY}");
+
+                var response = _httpClient.Send(request);
+                if (!response.IsSuccessStatusCode)
+                {
+                    return string.Empty;
+                }
+
+                var content = response.Content.ReadAsStringAsync().Result.Trim();
+                return content;
+            }
+            catch
+            {
+                return string.Empty;
+            }
         }
 
         public async Task<string> GetAccount(string gameName, string tagLine)
