@@ -36,7 +36,7 @@ function MatchChart({ data }: { data: MatchSummary["data"] }) {
   const maxValue = Math.max(...allValues);
   
   return (
-    <ChartContainer config={chartConfig} className="h-[200px] w-full">
+    <ChartContainer config={chartConfig} className="h-[250px] w-full">
       <LineChart
         data={data}
         margin={{
