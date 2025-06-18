@@ -118,7 +118,7 @@ namespace backend // This should be your project's namespace
                     Id = matchId,
                     SummonerName = userParticipant.SummonerName,
                     Champion = userParticipant.ChampionName,
-                    Rank = "Unranked", // You can enhance this with rank lookup later
+                    Rank = "Coming soon...", 
                     KDA = userParticipant.KDA,
                     CS = GetCreepScore(userParticipant, matchTimeline),
                     VisionScore = GetVisionScore(userParticipant, matchTimeline),
@@ -172,14 +172,14 @@ namespace backend // This should be your project's namespace
                     // Calculate impact based on the performance calculation logic
                     var (soloImpact, teamImpact) = CalculateImpactForMinute(minute, stats, userStats);
                     
-                    cumulativeSoloScore += soloImpact;
-                    cumulativeTeamScore += teamImpact;
+                    cumulativeSoloScore = soloImpact;
+                    cumulativeTeamScore = teamImpact;
                     
                     dataPoints.Add(new ChartDataPoint
                     {
                         Minute = minute,
-                        YourImpact = Math.Round(cumulativeSoloScore, 1),
-                        TeamImpact = Math.Round(cumulativeTeamScore, 1)
+                        YourImpact = cumulativeSoloScore,
+                        TeamImpact = cumulativeTeamScore
                     });
                 }
             }
@@ -191,8 +191,8 @@ namespace backend // This should be your project's namespace
                 dataPoints.Add(new ChartDataPoint
                 {
                     Minute = 35, // "Final" in frontend
-                    YourImpact = Math.Round(cumulativeSoloScore, 1),
-                    TeamImpact = Math.Round(cumulativeTeamScore, 1)
+                    YourImpact = cumulativeSoloScore,
+                    TeamImpact = cumulativeTeamScore
                 });
             }
             

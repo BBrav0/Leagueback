@@ -17,7 +17,6 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BackendBridge, MatchSummary } from "@/lib/bridge"
 
-// Removed static data - now using real backend data
 
 const chartConfig = {
   yourImpact: {
