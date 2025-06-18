@@ -8,6 +8,14 @@ namespace backend // Or whatever your project's namespace is
         {
             InitializeComponent();
             InitializeAsync();
+            Loaded += MainWindow_Loaded;
+        }
+
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Set the minimum width and height to the current actual width and height.
+            MinWidth = ActualWidth;
+            MinHeight = ActualHeight;
         }
 
         // In MainWindow.xaml.cs
