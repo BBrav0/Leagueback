@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
+import { CartesianGrid, Line, LineChart, XAxis, YAxis, ReferenceArea } from "recharts"
 import {
   ChartContainer,
   ChartTooltip,
@@ -21,15 +21,20 @@ import { BackendBridge, MatchSummary } from "@/lib/bridge"
 const chartConfig = {
   yourImpact: {
     label: "Your Impact",
-    color: "#22c55e", // Green
+    color: "#FFFDD0", 
   },
   teamImpact: {
     label: "Team Impact",
-    color: "#ef4444", // Red
+    color: "#FDB813", 
   },
 }
 
 function MatchChart({ data }: { data: MatchSummary["data"] }) {
+  // Calculate the data range to position the gradient correctly
+  const allValues = data.flatMap(d => [d.yourImpact || 0, d.teamImpact || 0]);
+  const minValue = Math.min(...allValues);
+  const maxValue = Math.max(...allValues);
+  
   return (
     <ChartContainer config={chartConfig} className="h-[200px] w-full">
       <LineChart
@@ -41,6 +46,37 @@ function MatchChart({ data }: { data: MatchSummary["data"] }) {
           bottom: 10,
         }}
       >
+        {/* === START: GRADIENT DEFINITIONS === */}
+        <defs>
+          {/* Gradient for the POSITIVE (green) area */}
+          <linearGradient id="positiveGradient" x1="0" y1="1" x2="0" y2="0">
+            {/* Goes from bottom (y1=1) to top (y2=0) */}
+            <stop offset="0%" stopColor="rgba(34, 197, 94, 0.3)" /> {/* Subtle Green at y=0 axis */}
+            <stop offset="100%" stopColor="rgba(34, 197, 94, 0.9)" /> {/* Rewarding Green at top */}
+          </linearGradient>
+
+          {/* Gradient for the NEGATIVE (red) area */}
+          <linearGradient id="negativeGradient" x1="0" y1="0" x2="0" y2="1">
+            {/* Goes from top (y1=0) to bottom (y2=1) */}
+            <stop offset="0%" stopColor="rgba(239, 68, 68, 0.30)" /> {/* Subtle Red at y=0 axis */}
+            <stop offset="100%" stopColor="rgba(239, 68, 68, 0.9)" /> {/* Vicious Red at bottom */}
+          </linearGradient>
+        </defs>
+        {/* === END: GRADIENT DEFINITIONS === */}
+
+        {/* Green background for positive values (above 0) */}
+        <ReferenceArea
+          y1={0}
+          y2={maxValue + 10}
+          fill="url(#positiveGradient)" // Apply the positive gradient
+        />
+        {/* Red background for negative values (below 0) */}
+        <ReferenceArea
+          y1={minValue - 10}
+          y2={0}
+          fill="url(#negativeGradient)" // Apply the negative gradient
+        />
+
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted-foreground))" opacity={0.3} />
         <XAxis
           dataKey="minute"
@@ -71,6 +107,7 @@ function MatchChart({ data }: { data: MatchSummary["data"] }) {
         <Line
           dataKey="teamImpact"
           type="monotone"
+          strokeDasharray="5 5"
           stroke={chartConfig.teamImpact.color}
           strokeWidth={2}
           dot={{ fill: chartConfig.teamImpact.color, strokeWidth: 1, r: 3 }}
@@ -243,12 +280,12 @@ export default function Component() {
                         </Badge>
                       </CardTitle>
                       <CardDescription className="text-slate-300 mt-1">
-                        {match.summonerName} • {match.gameTime} • KDA: {match.kda}
+                        {match.summonerName} ⏱️ {match.gameTime} ⚔️ KDA: {match.kda}
                       </CardDescription>
                     </div>
                     <div className="text-right space-y-1">
                       <div className="text-slate-300 text-sm">
-                        CS: {match.cs} • Vision: {match.visionScore}
+                        CS: {match.cs} • Vision: { match.visionScore ? match.visionScore : "Feature coming soon" }
                       </div>
                       <div className="text-slate-400 text-xs">
                         {match.rank}

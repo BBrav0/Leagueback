@@ -88,7 +88,6 @@ namespace backend // This should be your project's namespace
                 {
                     return JsonSerializer.Serialize(new PerformanceAnalysisResult { Success = false, Error = "Could not retrieve match timeline data." });
                 }
-
                 var userTeam = matchDetails.Info.Teams.FirstOrDefault(t => t.TeamId == userParticipant.TeamId);
                 string gameResult = userTeam?.Win == true ? "Victory" : "Defeat";
 
@@ -108,7 +107,7 @@ namespace backend // This should be your project's namespace
                     Id = matchId,
                     SummonerName = userParticipant.SummonerName,
                     Champion = userParticipant.ChampionName,
-                    Rank = "Coming soon...",
+                    Rank = "Feature coming soon 👀",
                     KDA = userParticipant.KDA,
                     CS = GetCreepScore(userParticipant, matchTimeline),
                     VisionScore = GetVisionScore(userParticipant, matchTimeline),
