@@ -25,8 +25,12 @@ namespace backend // Or whatever your project's namespace is
             webView.CoreWebView2.AddHostObjectToScript("backendBridge", new BackendApiBridge());
             
 
-            // Point to your Next.js dev server
-            webView.CoreWebView2.Navigate("http://localhost:3000");
+            // Point to the self-hosted backend which also serves the frontend assets
+            // PUBLISH COMMAND
+             webView.CoreWebView2.Navigate("http://localhost:5000");
+
+            // TESTING COMMAND
+            //webView.CoreWebView2.Navigate("http://localhost:3000");
         }
     }
 }

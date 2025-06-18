@@ -55,11 +55,13 @@ export interface LeagueClientInfo {
 
 export class BackendBridge {
   private static isWebView2Available(): boolean {
-    return typeof window !== 'undefined' && 
-           window.chrome && 
-           window.chrome.webview && 
-           window.chrome.webview.hostObjects && 
-           window.chrome.webview.hostObjects.backendBridge;
+    return !!(
+      typeof window !== 'undefined' &&
+      (window as any).chrome &&
+      (window as any).chrome.webview &&
+      (window as any).chrome.webview.hostObjects &&
+      (window as any).chrome.webview.hostObjects.backendBridge
+    );
   }
 
   static async getAccount(gameName: string, tagLine: string): Promise<AccountData | null> {
@@ -164,7 +166,9 @@ export class BackendBridge {
 
   static async getLeagueClientInfo(): Promise<LeagueClientInfo> {
     try {
-      const response = await fetch('/api/LeagueClient/league-client-info');
+      // Build the API URL relative to the current origin (works for dev, prod, and WebView2 scenarios)
+      const apiUrl = `${window.location.origin}/api/LeagueClient/league-client-info`;
+      const response = await fetch(apiUrl);
       if (!response.ok) {
         throw new Error('Failed to get League client info');
       }

@@ -15,19 +15,18 @@ namespace backend
         protected override void OnStartup(StartupEventArgs e)
         {
             // Load environment variables from the .env file
-            Env.Load();
+            try
+            {
+                // Ignore if the .env file is missing – prevents the app from crashing
+                Env.Load();
+            }
+            catch { /* swallow */ }
             
             _host = Host.CreateDefaultBuilder(e.Args)
                 .ConfigureWebHost(webBuilder =>
                 {
-                    webBuilder.UseKestrel(options =>
-                    {
-                        options.ListenAnyIP(5000); // HTTP
-                        options.ListenAnyIP(5001, listenOptions => // HTTPS
-                        {
-                            listenOptions.UseHttps();
-                        });
-                    });
+                    // Bind only HTTP by default – avoids needing a dev certificate in production
+                    webBuilder.UseKestrel(options => options.ListenAnyIP(5000));
                     webBuilder.UseStartup<Startup>();
                 })
                 .Build();

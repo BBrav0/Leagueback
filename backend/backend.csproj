@@ -23,4 +23,31 @@
   <ItemGroup>
     <Resource Include="assets\icon.png" />
   </ItemGroup>
+
+  <!-- Copy built static frontend into wwwroot when publishing -->
+  <Target Name="CopyFrontendDist" AfterTargets="Publish">
+    <!-- Location of the exported Next.js site -->
+    <ItemGroup>
+      <FrontendDist Include="..\frontend\out\**\*.*" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(FrontendDist)"
+          DestinationFolder="$(PublishDir)wwwroot\%(RecursiveDir)"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- Assembly / file metadata -->
+  <PropertyGroup>
+    <AssemblyName>Leagueback</AssemblyName>
+    <AssemblyTitle>Leagueback Desktop</AssemblyTitle>
+    <Product>Leagueback</Product>
+    <Company>Ben Bravo Apps</Company>
+    <Copyright>© 2025 Ben Bravo</Copyright>
+
+    <!-- Versioning -->
+    <InformationalVersion>0.2.7</InformationalVersion>
+    <FileVersion>0.2.7</FileVersion>
+
+    <ApplicationIcon>assets\icon.ico</ApplicationIcon>
+  </PropertyGroup>
 </Project>

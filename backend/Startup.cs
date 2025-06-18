@@ -21,9 +21,15 @@ namespace backend
 
             app.UseRouting();
 
+            // Serve static files from the wwwroot folder
+            app.UseDefaultFiles(); // Looks for index.html by default
+            app.UseStaticFiles();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                // Fallback route so that client-side routing works in the SPA
+                endpoints.MapFallbackToFile("index.html");
             });
         }
     }
