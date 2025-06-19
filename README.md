@@ -25,12 +25,12 @@ The app surfaces these insights through clean charts and dashboards so you can f
 ## Coming Soon
 
 - ⚡ **Real-time impact score** updated during the match
-- 🗺️ **Objective & lane weighting** for an even smarter algorithm
-- 🎨 **Customisable themes & settings panel**
+- 🗺️ **Objective, turret, and lane weighting** for an even smarter algorithm
+- 🥧 **Pie chart** summarising total impact wins & losses
+- 🖼️ **Rank icons, scoreboard, and additional UI polish**
+- 📈 **Algorithm smoothing** for fairer score curves
+- 🛠️ **Settings panel**: clear cache, theme customisation, and more
 
-## Screenshots
-
-*Coming soon!*
 
 ## Installation
 
@@ -60,14 +60,6 @@ $ cd ../frontend
 $ pnpm install
 $ pnpm dev
 ```
-
-## Roadmap
-
-- [ ] Integrate turrets, objectives, and lane data into the algorithm
-- [ ] Add pie chart summarising total impact wins & losses
-- [ ] Rank icons, scoreboard, and additional UI polish
-- [ ] Algorithm smoothing for fairer score curves
-- [ ] Settings panel: clear cache, theme customisation, and more
 
 ## Contributing
 
