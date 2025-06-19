@@ -34,7 +34,7 @@ The app surfaces these insights through clean charts and dashboards so you can f
 
 ## Installation
 
-1. Download the latest **Leagueback.zip** from the [releases page](https://github.com/your-org/Leagueback/releases).
+1. Download the latest **Leagueback.zip** from the [releases page](https://github.com/BBrav0/Leagueback/releases).
 2. Extract the archive to a folder of your choice.
 3. Double-click `Leagueback.exe`—that's it!
 
