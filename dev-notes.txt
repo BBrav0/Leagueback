@@ -1,0 +1,12 @@
+dotnet publish backend.csproj `  -c Release -r win-x64 --self-contained true `  /p:PublishSingleFile=true
+
+IN MAINWINDOW.XAML.CS
+
+  // Point to the self-hosted backend which also serves the frontend assets
+  // PUBLISH COMMAND
+    webView.CoreWebView2.Navigate("http://localhost:5000");
+
+  // TESTING COMMAND
+  //webView.CoreWebView2.Navigate("http://localhost:3000");
+
+  SWITCH WHEN NEEDED
