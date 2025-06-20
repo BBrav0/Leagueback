@@ -5,7 +5,7 @@ using System.Text.RegularExpressions;
 using System.IO;
 using Microsoft.Extensions.Logging;
 using System.Net.Http;
-using backend; // Add this at the top for PlayerCache
+using backend; // Access PlayerCache & UserCache
 
 namespace backend.Controllers
 {
@@ -31,21 +31,21 @@ namespace backend.Controllers
 
             if (leagueProcess == null)
             {
-                // Try to load from cache
-                var cache = await PlayerCache.LoadCacheDataAsync();
-                if (PlayerCache.IsCacheValid(cache))
+                // Try to load from user cache (never expires)
+                var userCache = await UserCache.LoadCacheDataAsync();
+                if (userCache != null)
                 {
-                    Console.WriteLine("Returning cached player info");
+                    Console.WriteLine("Returning cached player info (non-expiring)");
                     return Ok(new {
-                        gameName = cache.GameName,
-                        tagLine = cache.TagLine,
+                        gameName = userCache.GameName,
+                        tagLine = userCache.TagLine,
                         isAvailable = true,
                         fromCache = true
                     });
                 }
-                Console.WriteLine("League of Legends process not found and no valid cache");
-                _logger.LogWarning("League of Legends process not found and no valid cache.");
-                return NotFound(new { message = "League of Legends process not found and no valid cache." });
+                Console.WriteLine("League of Legends process not found and no user cache available");
+                _logger.LogWarning("League of Legends process not found and no user cache available.");
+                return NotFound(new { message = "League of Legends process not found and no user cache available." });
             }
 
             Console.WriteLine($"Found League process: {leagueProcess.ProcessName}");
@@ -121,8 +121,8 @@ namespace backend.Controllers
                     var gameName = summoner.GetProperty("gameName").GetString();
                     var tagLine = summoner.GetProperty("tagLine").GetString();
 
-                    // Save to cache
-                    await PlayerCache.SaveCacheDataAsync(
+                    // Save to user cache (never expires)
+                    await UserCache.SaveCacheDataAsync(
                         summoner.GetProperty("puuid").GetString() ?? string.Empty,
                         gameName ?? string.Empty,
                         tagLine ?? string.Empty

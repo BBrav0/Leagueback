@@ -105,15 +105,22 @@ function ImpactPieChart({ counts }: { counts: ImpactCounts }) {
 }
 
 function MatchChart({ data }: { data: MatchSummary["data"] }) {
+  // Round values to 2 decimal places for a cleaner chart display
+  const roundedData = data.map((d) => ({
+    ...d,
+    yourImpact: Number(d.yourImpact.toFixed(1)),
+    teamImpact: Number(d.teamImpact.toFixed(1)),
+  }));
+
   // Calculate the data range to position the gradient correctly
-  const allValues = data.flatMap(d => [d.yourImpact || 0, d.teamImpact || 0]);
+  const allValues = roundedData.flatMap(d => [d.yourImpact || 0, d.teamImpact || 0]);
   const minValue = Math.min(...allValues);
   const maxValue = Math.max(...allValues);
   
   return (
     <ChartContainer config={chartConfig} className="h-[250px] w-full justify-start">
       <LineChart
-        data={data}
+        data={roundedData}
         margin={{
           top: 10,
           left: -25,
@@ -250,7 +257,7 @@ export default function Component() {
     setHasSearched(true);
 
     try {
-      const matches = await BackendBridge.getPlayerMatchData(name, tag, 5);
+      const matches = await BackendBridge.getPlayerMatchData(name, tag, 10);
 
       // Calculate impact category counts
       const counts: ImpactCounts = {
