@@ -4,7 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Tasks;
-using backend.Models; // Or the namespace where your Models.cs file is
+using backend.Models;
 using System.Net.Http;
 
 namespace backend // This should be your project's namespace
@@ -72,7 +72,9 @@ namespace backend // This should be your project's namespace
 
             try
             {
+                    #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 AccountDto account = await _riotApiService!.GetAccountByRiotIdAsync(gameName, tagLine);
+                    #pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
                 return JsonSerializer.Serialize(account);
             }
             catch (Exception ex)
@@ -139,6 +141,13 @@ namespace backend // This should be your project's namespace
                 var performanceData = calculator.GenerateChartData(matchDetails, matchTimeline, userPuuid);
                 // --- END REFACTORED SECTION ---
 
+
+                ChartDataPoint impacts = performanceData.FirstOrDefault(point => point.Minute == -1);
+                double teamImpactAvg = impacts.TeamImpact;
+                double yourImpactAvg = impacts.YourImpact;
+
+                performanceData.Remove(impacts);
+
                 var matchSummary = new MatchSummary
                 {
                     Id = matchId,
@@ -150,7 +159,10 @@ namespace backend // This should be your project's namespace
                     VisionScore = GetVisionScore(userParticipant, matchTimeline),
                     GameResult = gameResult,
                     GameTime = gameTime,
-                    Data = performanceData
+                    Data = performanceData,
+                    TeamImpact = teamImpactAvg,
+                    YourImpact = yourImpactAvg
+
                 };
 
                 return JsonSerializer.Serialize(new PerformanceAnalysisResult
@@ -169,7 +181,6 @@ namespace backend // This should be your project's namespace
             }
         }
         
-        // Helper methods for populating the MatchSummary remain here, as that is part of the Bridge's job.
         private int GetCreepScore(Participant participant, MatchTimelineDto timeline)
         {
             var lastFrame = timeline.Info.Frames.LastOrDefault();

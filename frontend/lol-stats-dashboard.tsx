@@ -57,7 +57,7 @@ const pieData: { name: keyof typeof pieConfig; value: number }[] = [
   { name: "guaranteedLosses", value: 25 },
 ]
 
-function ImpactPieChart() {
+function ImpactPieChart({ data }: { data: MatchSummary["data"] }) {
   return (
     <ChartContainer
       config={pieConfig}
@@ -343,12 +343,14 @@ export default function Component() {
                           </Badge>
                         </CardTitle>
                         <CardDescription className="text-slate-300 mt-1">
-                          {match.summonerName} ⏱️ {match.gameTime} ⚔️ KDA: {match.kda}
+                          {match.summonerName} ⏱️ {match.gameTime} ⚔️ {match.kda}  <br />
+                          🧙 {match.cs} 🔎 {match.visionScore}
                         </CardDescription>
                       </div>
                       <div className="text-right space-y-1">
                         <div className="text-slate-300 text-sm">
-                          CS: {match.cs} • Vision: { match.visionScore ? match.visionScore : "Feature coming soon" }
+                          Your Average Score: {match.yourImpact.toFixed(2)} <br />
+                          Average Teammate Score: { match.teamImpact.toFixed(2) }
                         </div>
                         <div className="text-slate-400 text-xs">
                           {match.rank}
@@ -374,7 +376,7 @@ export default function Component() {
                   <CardDescription className="text-slate-300">Placeholder distribution</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 flex items-center justify-center">
-                  <ImpactPieChart />
+                  <ImpactPieChart data={[]} />
                 </CardContent>
               </Card>
             </div>

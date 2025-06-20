@@ -39,6 +39,8 @@ export interface MatchSummary {
   gameResult: "Victory" | "Defeat";
   gameTime: string;
   data: ChartDataPoint[];
+  yourImpact: number;
+  teamImpact: number;
 }
 
 export interface PerformanceAnalysisResult {
