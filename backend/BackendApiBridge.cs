@@ -156,7 +156,7 @@ namespace backend // This should be your project's namespace
                     Rank = "Feature coming soon 👀",
                     KDA = userParticipant.KDA,
                     CS = GetCreepScore(userParticipant, matchTimeline),
-                    VisionScore = GetVisionScore(userParticipant, matchTimeline),
+                    VisionScore = GetVisionScore(userParticipant, matchDetails),
                     GameResult = gameResult,
                     GameTime = gameTime,
                     Data = performanceData,
@@ -191,11 +191,9 @@ namespace backend // This should be your project's namespace
             return 0;
         }
 
-        private int GetVisionScore(Participant participant, MatchTimelineDto timeline)
+        private int GetVisionScore(Participant participant, MatchDto match)
         {
-            // The VisionScore property is not available on your Participant model,
-            // so this is reverted to the original placeholder to prevent a compile error.
-            return 0; // Placeholder
+            return match.Info.Participants.FirstOrDefault(p => p.ParticipantId == participant.ParticipantId)?.VisionScore ?? 0;
         }
     }
 }

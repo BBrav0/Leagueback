@@ -53,6 +53,9 @@ namespace backend.Models
         public string SummonerName { get; set; } = string.Empty;
         [JsonPropertyName("championName")]
         public string ChampionName { get; set; } = string.Empty;
+        
+        [JsonPropertyName("visionScore")]
+        public int VisionScore {get; set; }
         [JsonPropertyName("kills")]
         public int Kills { get; set; }
         [JsonPropertyName("deaths")]
