@@ -368,7 +368,7 @@ export default function Component() {
 
             {/* Impact overview pie chart */}
             <div className="md:flex-1">
-              <Card className="bg-slate-800/50 border-slate-600/50 h-[450px] flex flex-col">
+              <Card className="bg-slate-800/50 border-slate-600/50 h-[450px] flex flex-col sticky top-6">
                 <CardHeader>
                   <CardTitle className="text-white">Impact Overview</CardTitle>
                   <CardDescription className="text-slate-300">Placeholder distribution</CardDescription>
