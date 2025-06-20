@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CartesianGrid, Line, LineChart, XAxis, YAxis, ReferenceArea } from "recharts"
+import { CartesianGrid, Line, LineChart, XAxis, YAxis, ReferenceArea, PieChart, Pie, Cell } from "recharts"
 import {
   ChartContainer,
   ChartTooltip,
@@ -27,6 +27,67 @@ const chartConfig = {
     label: "Team Impact",
     color: "#FDB813", 
   },
+}
+
+// Placeholder data & config for the impact overview pie chart
+const pieConfig = {
+  impactWins: {
+    label: "Impact Wins",
+    color: "#22c55e", // Green
+  },
+  impactLosses: {
+    label: "Impact Losses",
+    color: "#ef4444", // Red
+  },
+  guaranteedWins: {
+    label: "Guaranteed Wins",
+    color: "#3b82f6", // Blue
+  },
+  guaranteedLosses: {
+    label: "Guaranteed Losses",
+    color: "#fde047", // Yellow
+  },
+} as const
+
+// Mutable array so Recharts can mutate internal props without readonly conflict
+const pieData: { name: keyof typeof pieConfig; value: number }[] = [
+  { name: "impactWins", value: 25 },
+  { name: "impactLosses", value: 25 },
+  { name: "guaranteedWins", value: 25 },
+  { name: "guaranteedLosses", value: 25 },
+]
+
+function ImpactPieChart() {
+  return (
+    <ChartContainer
+      config={pieConfig}
+      className="h-[300px] w-full justify-center"
+    >
+      <PieChart>
+        <Pie
+          data={pieData}
+          dataKey="value"
+          nameKey="name"
+          cx="50%"
+          cy="50%"
+          innerRadius={60}
+          outerRadius={110}
+          paddingAngle={2}
+          strokeWidth={0}
+          label={({ name }) => pieConfig[name as keyof typeof pieConfig].label}
+        >
+          {pieData.map((entry) => (
+            <Cell
+              key={`cell-${entry.name}`}
+              fill={pieConfig[entry.name as keyof typeof pieConfig].color}
+            />
+          ))}
+        </Pie>
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+      </PieChart>
+    </ChartContainer>
+  )
 }
 
 function MatchChart({ data }: { data: MatchSummary["data"] }) {
@@ -267,40 +328,56 @@ export default function Component() {
 
         {/* Match List */}
         {hasSearched && !loading && matchesData.length > 0 && (
-          <div className="space-y-6">
-            {matchesData.map((match) => (
-              <Card key={match.id} className="bg-slate-800/50 border-slate-600/50 w-3/5">
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Match cards */}
+            <div className="md:w-3/5 space-y-6">
+              {matchesData.map((match) => (
+                <Card key={match.id} className="bg-slate-800/50 border-slate-600/50 w-full">
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-white flex items-center gap-3">
+                          {match.champion}
+                          <Badge variant={match.gameResult === "Victory" ? "default" : "destructive"}>
+                            {match.gameResult}
+                          </Badge>
+                        </CardTitle>
+                        <CardDescription className="text-slate-300 mt-1">
+                          {match.summonerName} ⏱️ {match.gameTime} ⚔️ KDA: {match.kda}
+                        </CardDescription>
+                      </div>
+                      <div className="text-right space-y-1">
+                        <div className="text-slate-300 text-sm">
+                          CS: {match.cs} • Vision: { match.visionScore ? match.visionScore : "Feature coming soon" }
+                        </div>
+                        <div className="text-slate-400 text-xs">
+                          {match.rank}
+                        </div>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="text-slate-300 text-sm font-medium">Performance Timeline</div>
+                      <MatchChart data={match.data} />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Impact overview pie chart */}
+            <div className="md:flex-1">
+              <Card className="bg-slate-800/50 border-slate-600/50 h-[450px] flex flex-col">
                 <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-white flex items-center gap-3">
-                        {match.champion}
-                        <Badge variant={match.gameResult === "Victory" ? "default" : "destructive"}>
-                          {match.gameResult}
-                        </Badge>
-                      </CardTitle>
-                      <CardDescription className="text-slate-300 mt-1">
-                        {match.summonerName} ⏱️ {match.gameTime} ⚔️ KDA: {match.kda}
-                      </CardDescription>
-                    </div>
-                    <div className="text-right space-y-1">
-                      <div className="text-slate-300 text-sm">
-                        CS: {match.cs} • Vision: { match.visionScore ? match.visionScore : "Feature coming soon" }
-                      </div>
-                      <div className="text-slate-400 text-xs">
-                        {match.rank}
-                      </div>
-                    </div>
-                  </div>
+                  <CardTitle className="text-white">Impact Overview</CardTitle>
+                  <CardDescription className="text-slate-300">Placeholder distribution</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="text-slate-300 text-sm font-medium">Performance Timeline</div>
-                    <MatchChart data={match.data} />
-                  </div>
+                <CardContent className="flex-1 flex items-center justify-center">
+                  <ImpactPieChart />
                 </CardContent>
               </Card>
-            ))}
+            </div>
           </div>
         )}
 
