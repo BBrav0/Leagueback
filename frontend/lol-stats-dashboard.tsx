@@ -29,7 +29,7 @@ const chartConfig = {
   },
 }
 
-// Placeholder data & config for the impact overview pie chart
+// Impact overview pie-chart color config
 const pieConfig = {
   impactWins: {
     label: "Impact Wins",
@@ -49,15 +49,25 @@ const pieConfig = {
   },
 } as const
 
-// Mutable array so Recharts can mutate internal props without readonly conflict
-const pieData: { name: keyof typeof pieConfig; value: number }[] = [
-  { name: "impactWins", value: 25 },
-  { name: "impactLosses", value: 25 },
-  { name: "guaranteedWins", value: 25 },
-  { name: "guaranteedLosses", value: 25 },
-]
+// Type describing the aggregate counts for each category
+type ImpactCounts = {
+  impactWins: number
+  impactLosses: number
+  guaranteedWins: number
+  guaranteedLosses: number
+}
 
-function ImpactPieChart({ data }: { data: MatchSummary["data"] }) {
+function ImpactPieChart({ counts }: { counts: ImpactCounts }) {
+  // Convert counts → pie chart data on each render
+  const pieData: { name: keyof typeof pieConfig; value: number }[] = [
+    { name: "impactWins", value: counts.impactWins },
+    { name: "impactLosses", value: counts.impactLosses },
+    { name: "guaranteedWins", value: counts.guaranteedWins },
+    { name: "guaranteedLosses", value: counts.guaranteedLosses },
+  ]
+
+  const total = pieData.reduce((acc, cur) => acc + cur.value, 0);
+
   return (
     <ChartContainer
       config={pieConfig}
@@ -74,7 +84,11 @@ function ImpactPieChart({ data }: { data: MatchSummary["data"] }) {
           outerRadius={110}
           paddingAngle={2}
           strokeWidth={0}
-          label={({ name }) => pieConfig[name as keyof typeof pieConfig].label}
+          label={({ name, value }) => {
+            const percent = total > 0 ? ((value as number) / total) * 100 : 0;
+            return `${pieConfig[name as keyof typeof pieConfig].label} ${percent.toFixed(0)}%`;
+          }}
+          labelLine={false}
         >
           {pieData.map((entry) => (
             <Cell
@@ -181,6 +195,12 @@ function MatchChart({ data }: { data: MatchSummary["data"] }) {
 
 export default function Component() {
   const [matchesData, setMatchesData] = useState<MatchSummary[]>([]);
+  const [impactCounts, setImpactCounts] = useState<ImpactCounts>({
+    impactWins: 0,
+    impactLosses: 0,
+    guaranteedWins: 0,
+    guaranteedLosses: 0,
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gameName, setGameName] = useState("");
@@ -231,6 +251,25 @@ export default function Component() {
 
     try {
       const matches = await BackendBridge.getPlayerMatchData(name, tag, 5);
+
+      // Calculate impact category counts
+      const counts: ImpactCounts = {
+        impactWins: 0,
+        impactLosses: 0,
+        guaranteedWins: 0,
+        guaranteedLosses: 0,
+      };
+
+      matches.forEach((m) => {
+        const youHigher = m.yourImpact > m.teamImpact;
+        const win = m.gameResult === "Victory";
+        if (win && youHigher) counts.impactWins++;
+        else if (!win && !youHigher) counts.impactLosses++;
+        else if (!win && youHigher) counts.guaranteedLosses++;
+        else if (win && !youHigher) counts.guaranteedWins++;
+      });
+
+      setImpactCounts(counts);
       setMatchesData(matches);
       if (matches.length === 0) {
         setError("No matches found for this player");
@@ -376,7 +415,7 @@ export default function Component() {
                   <CardDescription className="text-slate-300">Placeholder distribution</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 flex items-center justify-center">
-                  <ImpactPieChart data={[]} />
+                  <ImpactPieChart counts={impactCounts} />
                 </CardContent>
               </Card>
             </div>
