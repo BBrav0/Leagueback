@@ -27,10 +27,10 @@ namespace backend // Or whatever your project's namespace is
 
             // Point to the self-hosted backend which also serves the frontend assets
             // PUBLISH COMMAND
-             webView.CoreWebView2.Navigate("http://localhost:5000");
+             //webView.CoreWebView2.Navigate("http://localhost:5000");
 
             // TESTING COMMAND
-            //webView.CoreWebView2.Navigate("http://localhost:3000");
+            webView.CoreWebView2.Navigate("http://localhost:3000");
         }
     }
 }

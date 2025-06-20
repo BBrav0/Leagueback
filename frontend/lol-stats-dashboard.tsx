@@ -36,12 +36,12 @@ function MatchChart({ data }: { data: MatchSummary["data"] }) {
   const maxValue = Math.max(...allValues);
   
   return (
-    <ChartContainer config={chartConfig} className="h-[250px] w-full">
+    <ChartContainer config={chartConfig} className="h-[250px] w-full justify-start">
       <LineChart
         data={data}
         margin={{
           top: 10,
-          left: 10,
+          left: -25,
           right: 10,
           bottom: 10,
         }}
@@ -269,7 +269,7 @@ export default function Component() {
         {hasSearched && !loading && matchesData.length > 0 && (
           <div className="space-y-6">
             {matchesData.map((match) => (
-              <Card key={match.id} className="bg-slate-800/50 border-slate-600/50">
+              <Card key={match.id} className="bg-slate-800/50 border-slate-600/50 w-3/5">
                 <CardHeader>
                   <div className="flex justify-between items-start">
                     <div>
