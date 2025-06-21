@@ -21,15 +21,16 @@ The app surfaces these insights through clean charts and dashboards so you can f
 
 - 📊 **Performance dashboard** contrasting you vs. team averages
 - 💾 **Local match cache** for ultra-fast history look-ups
+- 🥧 **Pie chart** summarising total impact wins & losses
+- 🛠️ **Settings panel**: clear cache
 
 ## Coming Soon
 
 - ⚡ **Real-time impact score** updated during the match
 - 🗺️ **Objective, turret, and lane weighting** for an even smarter algorithm
-- 🥧 **Pie chart** summarising total impact wins & losses
 - 🖼️ **Rank icons, scoreboard, and additional UI polish**
 - 📈 **Algorithm smoothing** for fairer score curves
-- 🛠️ **Settings panel**: clear cache, theme customisation, and more
+
 
 
 ## Installation

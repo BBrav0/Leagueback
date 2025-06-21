@@ -10,3 +10,6 @@ IN MAINWINDOW.XAML.CS
   //webView.CoreWebView2.Navigate("http://localhost:3000");
 
   SWITCH WHEN NEEDED
+
+more todo:
+vision score difference, cs diffrence, vs double for supp and jung

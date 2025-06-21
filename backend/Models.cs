@@ -53,6 +53,9 @@ namespace backend.Models
         public string SummonerName { get; set; } = string.Empty;
         [JsonPropertyName("championName")]
         public string ChampionName { get; set; } = string.Empty;
+        
+        [JsonPropertyName("visionScore")]
+        public int VisionScore {get; set; }
         [JsonPropertyName("kills")]
         public int Kills { get; set; }
         [JsonPropertyName("deaths")]
@@ -118,8 +121,14 @@ namespace backend.Models
         public string GameResult { get; set; } = string.Empty;
         [JsonPropertyName("gameTime")]
         public string GameTime { get; set; } = string.Empty;
+        // Chart data points for the timeline
         [JsonPropertyName("data")]
         public List<ChartDataPoint> Data { get; set; } = new();
+        // Average scores used for the pie-chart / summary stats
+        [JsonPropertyName("teamImpact")]
+        public double TeamImpact { get; set; }
+        [JsonPropertyName("yourImpact")]
+        public double YourImpact { get; set; }
     }
 
     public class PerformanceAnalysisResult

@@ -9,6 +9,9 @@ declare global {
             GetAccount(gameName: string, tagLine: string): Promise<string>;
             GetMatchHistory(puuid: string, count?: number): Promise<string>;
             AnalyzeMatchPerformance(matchId: string, userPuuid: string): Promise<string>;
+            ClearPlayerCache(): Promise<string>;
+            ClearImpactCache(): Promise<string>;
+            ClearAllCaches(): Promise<string>;
           };
         };
       };
@@ -39,6 +42,8 @@ export interface MatchSummary {
   gameResult: "Victory" | "Defeat";
   gameTime: string;
   data: ChartDataPoint[];
+  yourImpact: number;
+  teamImpact: number;
 }
 
 export interface PerformanceAnalysisResult {
@@ -179,6 +184,39 @@ export class BackendBridge {
         tagLine: '',
         isAvailable: false
       };
+    }
+  }
+
+  static async clearPlayerCache(): Promise<boolean> {
+    if (!this.isWebView2Available()) return false;
+    try {
+      const result = await window.chrome.webview.hostObjects.backendBridge.ClearPlayerCache();
+      const data = JSON.parse(result);
+      return data.success;
+    } catch {
+      return false;
+    }
+  }
+
+  static async clearImpactCache(): Promise<boolean> {
+    if (!this.isWebView2Available()) return false;
+    try {
+      const result = await window.chrome.webview.hostObjects.backendBridge.ClearImpactCache();
+      const data = JSON.parse(result);
+      return data.success;
+    } catch {
+      return false;
+    }
+  }
+
+  static async clearAllCaches(): Promise<boolean> {
+    if (!this.isWebView2Available()) return false;
+    try {
+      const result = await window.chrome.webview.hostObjects.backendBridge.ClearAllCaches();
+      const data = JSON.parse(result);
+      return data.success;
+    } catch {
+      return false;
     }
   }
 }

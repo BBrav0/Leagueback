@@ -41,13 +41,13 @@
     <AssemblyName>Leagueback</AssemblyName>
     <AssemblyTitle>Leagueback Desktop</AssemblyTitle>
     <Product>Leagueback</Product>
-    <Company>Ben Bravo Apps</Company>
+    <Company>Ben Bravo</Company>
     <Copyright>© 2025 Ben Bravo</Copyright>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
 
     <!-- Versioning -->
-    <InformationalVersion>0.2.9</InformationalVersion>
-    <FileVersion>0.2.9</FileVersion>
+    <InformationalVersion>0.3.0</InformationalVersion>
+    <FileVersion>0.3.0</FileVersion>
 
     <ApplicationIcon>assets\icon.ico</ApplicationIcon>
   </PropertyGroup>

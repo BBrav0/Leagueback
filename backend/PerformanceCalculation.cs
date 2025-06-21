@@ -33,6 +33,8 @@ namespace backend
         public List<ChartDataPoint> GenerateChartData(MatchDto matchDetails, MatchTimelineDto matchTimeline, string userPuuid)
         {
             var dataPoints = new List<ChartDataPoint>();
+
+            
             var userParticipant = matchDetails.Info.Participants.FirstOrDefault(p => p.Puuid == userPuuid);
             if (userParticipant == null) return dataPoints;
 
@@ -43,6 +45,9 @@ namespace backend
             double cumulativeTeamScore = 0.0;
 
             List<PlayerStatsAtTime> previousMinuteStats = new List<PlayerStatsAtTime>();
+
+            var cumScores = new double[2, timestampsToReport.Count+1];
+            int count = 0;
 
             for (int minute = 1; minute <= gameDurationInMinutes && minute < matchTimeline.Info.Frames.Count; minute++)
             {
@@ -83,6 +88,9 @@ namespace backend
                         YourImpact = cumulativeSoloScore,
                         TeamImpact = cumulativeTeamScore / 4
                     });
+                    cumScores[0, count] = cumulativeSoloScore;
+                    cumScores[1, count] = cumulativeTeamScore / 4;
+                    count++;
                 }
 
                 previousMinuteStats = currentMinuteStats;
@@ -95,7 +103,18 @@ namespace backend
                 YourImpact = cumulativeSoloScore,
                 TeamImpact = cumulativeTeamScore / 4
             });
+            cumScores[0, count] = cumulativeSoloScore;
+            cumScores[1, count] = cumulativeTeamScore / 4;
 
+            dataPoints.Add(new ChartDataPoint
+            {
+                Minute = -1,
+
+                YourImpact = Enumerable.Range(0, cumScores.GetLength(1)).Select(col => cumScores[0, col]).Average(),
+
+                TeamImpact = Enumerable.Range(0, cumScores.GetLength(1)).Select(col => cumScores[1, col]).Average()
+            });
+            
             return dataPoints;
         }
 

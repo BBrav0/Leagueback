@@ -20,9 +20,7 @@ const DevelopmentBanner = () => {
 
   return (
     <div style={bannerStyle}>
-      VERSION 0.2;
-      ALGORITHM IS STILL EXTREMELY WEAK;
-      UI IS STILL EXTREMELY MINIMAL
+      DISCLAIMER: THE CURRENT ALGORITHM IS NOT FULLY DEVELOPED; ON VERSION 0.3 IT IS ONLY USING K/D/A
     </div>
   );
 };

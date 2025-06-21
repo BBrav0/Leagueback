@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using backend.Models; // Or "MyWpfApp.Models" or whatever you have named it
+using backend; // Access PlayerCache
 
 namespace backend // Or "MyWpfApp"
 {
@@ -54,56 +55,88 @@ namespace backend // Or "MyWpfApp"
             }
         }
 
-        public async Task<List<string>?> GetMatchHistory(string puuid, int count = 20)
+        public async Task<List<string>?> GetMatchHistory(string puuid, int count = 10)
         {
             if (string.IsNullOrEmpty(puuid))
             {
                 throw new ArgumentNullException(nameof(puuid), "PUUID cannot be null or empty.");
             }
 
-            try
-            {
-                var url = $"{AMERICAS_URL}/lol/match/v5/matches/by-puuid/{puuid}/ids?type=ranked&start=0&count={count}";
-                var response = await _httpClient.GetAsync(url);
-                var content = await response.Content.ReadAsStringAsync();
+            // Attempt to pull from cache first
+            var cache = await PlayerCache.LoadCacheDataAsync();
+            bool cacheValid = cache != null && cache.Puuid == puuid && PlayerCache.IsCacheValid(cache, TimeSpan.FromMinutes(10));
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    throw new HttpRequestException($"Failed to get match history. Status: {response.StatusCode}, Response: {content}");
-                }
-
-                return JsonSerializer.Deserialize<List<string>>(content) ?? new List<string>();
-            }
-            catch (Exception)
+            if (cacheValid && cache!.MatchIds.Count >= count)
             {
-                throw;
+                // We already have enough recent matches stored
+                return cache.MatchIds.Take(count).ToList();
             }
+
+            // Either cache is invalid or doesn't have enough matches – call Riot API but request ONLY 10 matches max
+            const int ApiRequestCount = 10;
+            var url = $"{AMERICAS_URL}/lol/match/v5/matches/by-puuid/{puuid}/ids?type=ranked&start=0&count={ApiRequestCount}";
+            var response = await _httpClient.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"Failed to get match history. Status: {response.StatusCode}, Response: {content}");
+            }
+
+            var newMatchIds = JsonSerializer.Deserialize<List<string>>(content) ?? new List<string>();
+
+            // Prepare cache object
+            if (cache == null || cache.Puuid != puuid)
+            {
+                cache = new PlayerCache.CacheData { Puuid = puuid };
+            }
+
+            // Merge lists ensuring newest→oldest order (API already returns newest first)
+            cache.MatchIds = newMatchIds.Concat(cache.MatchIds).Distinct().ToList();
+
+            await PlayerCache.SaveCacheDataAsync(cache);
+
+            // Return as many matches as requested (up to what we have)
+            return cache.MatchIds.Take(count).ToList();
         }
 
         public async Task<MatchDto?> GetMatchDetails(string matchId)
         {
-             if (string.IsNullOrEmpty(matchId))
+            if (string.IsNullOrEmpty(matchId))
             {
                 throw new ArgumentNullException(nameof(matchId), "Match ID cannot be null or empty.");
             }
 
-            try
+            var cache = await PlayerCache.LoadCacheDataAsync();
+            if (cache != null && cache.MatchDetails.TryGetValue(matchId, out var cachedMatch) &&
+                PlayerCache.IsCacheValid(cache, TimeSpan.FromMinutes(10)))
             {
-                var url = $"{AMERICAS_URL}/lol/match/v5/matches/{matchId}";
-                var response = await _httpClient.GetAsync(url);
-                var content = await response.Content.ReadAsStringAsync();
+                return cachedMatch;
+            }
 
-                if (!response.IsSuccessStatusCode)
+            var url = $"{AMERICAS_URL}/lol/match/v5/matches/{matchId}";
+            var response = await _httpClient.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"Failed to get match details. Status: {response.StatusCode}, Response: {content}");
+            }
+
+            var matchDto = JsonSerializer.Deserialize<MatchDto>(content);
+
+            if (matchDto != null)
+            {
+                if (cache == null)
                 {
-                    throw new HttpRequestException($"Failed to get match details. Status: {response.StatusCode}, Response: {content}");
+                    cache = new PlayerCache.CacheData();
                 }
 
-                return JsonSerializer.Deserialize<MatchDto>(content);
+                cache.MatchDetails[matchId] = matchDto;
+                await PlayerCache.SaveCacheDataAsync(cache);
             }
-            catch (Exception)
-            {
-                throw;
-            }
+
+            return matchDto;
         }
 
         public async Task<MatchTimelineDto?> GetMatchTimeline(string matchId)
@@ -113,23 +146,36 @@ namespace backend // Or "MyWpfApp"
                 throw new ArgumentNullException(nameof(matchId), "Match ID cannot be null or empty.");
             }
 
-            try
+            var cache = await PlayerCache.LoadCacheDataAsync();
+            if (cache != null && cache.MatchTimelines.TryGetValue(matchId, out var cachedTimeline) &&
+                PlayerCache.IsCacheValid(cache, TimeSpan.FromMinutes(10)))
             {
-                var url = $"{AMERICAS_URL}/lol/match/v5/matches/{matchId}/timeline";
-                var response = await _httpClient.GetAsync(url);
-                var content = await response.Content.ReadAsStringAsync();
+                return cachedTimeline;
+            }
 
-                if (!response.IsSuccessStatusCode)
+            var url = $"{AMERICAS_URL}/lol/match/v5/matches/{matchId}/timeline";
+            var response = await _httpClient.GetAsync(url);
+            var content = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new HttpRequestException($"Failed to get match timeline. Status: {response.StatusCode}, Response: {content}");
+            }
+
+            var timelineDto = JsonSerializer.Deserialize<MatchTimelineDto>(content);
+
+            if (timelineDto != null)
+            {
+                if (cache == null)
                 {
-                    throw new HttpRequestException($"Failed to get match timeline. Status: {response.StatusCode}, Response: {content}");
+                    cache = new PlayerCache.CacheData();
                 }
 
-                return JsonSerializer.Deserialize<MatchTimelineDto>(content);
+                cache.MatchTimelines[matchId] = timelineDto;
+                await PlayerCache.SaveCacheDataAsync(cache);
             }
-            catch (Exception)
-            {
-                throw;
-            }
+
+            return timelineDto;
         }
     }
 }

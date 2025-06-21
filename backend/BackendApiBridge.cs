@@ -4,7 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Threading.Tasks;
-using backend.Models; // Or the namespace where your Models.cs file is
+using backend.Models;
 using System.Net.Http;
 
 namespace backend // This should be your project's namespace
@@ -72,7 +72,9 @@ namespace backend // This should be your project's namespace
 
             try
             {
+                    #pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 AccountDto account = await _riotApiService!.GetAccountByRiotIdAsync(gameName, tagLine);
+                    #pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
                 return JsonSerializer.Serialize(account);
             }
             catch (Exception ex)
@@ -139,6 +141,24 @@ namespace backend // This should be your project's namespace
                 var performanceData = calculator.GenerateChartData(matchDetails, matchTimeline, userPuuid);
                 // --- END REFACTORED SECTION ---
 
+
+                ChartDataPoint impacts = performanceData.FirstOrDefault(point => point.Minute == -1);
+                double teamImpactAvg = impacts.TeamImpact;
+                double yourImpactAvg = impacts.YourImpact;
+
+                // === Determine impact category to store in cache ===
+                bool youHigher = yourImpactAvg > teamImpactAvg;
+                string category;
+                if (gameResult == "Victory" && youHigher) category = "impactWins";
+                else if (gameResult == "Defeat" && !youHigher) category = "impactLosses";
+                else if (gameResult == "Victory") category = "guaranteedWins";
+                else category = "guaranteedLosses";
+
+                // Persist to lifetime impact cache (fire & forget)
+                _ = ImpactCache.AddOrUpdateCategoryAsync(matchId, category);
+
+                performanceData.Remove(impacts);
+
                 var matchSummary = new MatchSummary
                 {
                     Id = matchId,
@@ -147,10 +167,13 @@ namespace backend // This should be your project's namespace
                     Rank = "Feature coming soon 👀",
                     KDA = userParticipant.KDA,
                     CS = GetCreepScore(userParticipant, matchTimeline),
-                    VisionScore = GetVisionScore(userParticipant, matchTimeline),
+                    VisionScore = GetVisionScore(userParticipant, matchDetails),
                     GameResult = gameResult,
                     GameTime = gameTime,
-                    Data = performanceData
+                    Data = performanceData,
+                    TeamImpact = teamImpactAvg,
+                    YourImpact = yourImpactAvg
+
                 };
 
                 return JsonSerializer.Serialize(new PerformanceAnalysisResult
@@ -169,7 +192,6 @@ namespace backend // This should be your project's namespace
             }
         }
         
-        // Helper methods for populating the MatchSummary remain here, as that is part of the Bridge's job.
         private int GetCreepScore(Participant participant, MatchTimelineDto timeline)
         {
             var lastFrame = timeline.Info.Frames.LastOrDefault();
@@ -180,11 +202,29 @@ namespace backend // This should be your project's namespace
             return 0;
         }
 
-        private int GetVisionScore(Participant participant, MatchTimelineDto timeline)
+        private int GetVisionScore(Participant participant, MatchDto match)
         {
-            // The VisionScore property is not available on your Participant model,
-            // so this is reverted to the original placeholder to prevent a compile error.
-            return 0; // Placeholder
+            return match.Info.Participants.FirstOrDefault(p => p.ParticipantId == participant.ParticipantId)?.VisionScore ?? 0;
+        }
+
+        public string ClearPlayerCache()
+        {
+            bool success = PlayerCache.DeleteCacheFile();
+            return JsonSerializer.Serialize(new { success });
+        }
+
+        public string ClearImpactCache()
+        {
+            bool success = ImpactCache.DeleteCacheFile();
+            return JsonSerializer.Serialize(new { success });
+        }
+
+        public string ClearAllCaches()
+        {
+            bool p = PlayerCache.DeleteCacheFile();
+            bool i = ImpactCache.DeleteCacheFile();
+            bool u = UserCache.DeleteCacheFile();
+            return JsonSerializer.Serialize(new { success = p && i && u });
         }
     }
 }
