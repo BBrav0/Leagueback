@@ -303,9 +303,18 @@ export default function Component() {
     <div className="min-h-screen bg-gradient-to-br from-blue-950 via-purple-900 to-blue-900 p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold text-white">League of Legends Match History</h1>
-          <p className="text-blue-200">Performance Timeline & Impact Analysis</p>
+        <div className="flex items-center justify-between">
+          {/* Title & subtitle */}
+          <div className="space-y-2">
+            <h1 className="text-4xl font-bold text-white">League of Legends Match History</h1>
+            <p className="text-blue-200">Performance Timeline & Impact Analysis</p>
+          </div>
+
+          {/* Placeholder action buttons */}
+          <div className="flex gap-2">
+            <Button variant="secondary">Settings</Button>
+            <Button variant="secondary">Account</Button>
+          </div>
         </div>
 
         {/* Search Form - Only show if manual input is needed */}
@@ -384,7 +393,10 @@ export default function Component() {
                       <div>
                         <CardTitle className="text-white flex items-center gap-3">
                           {match.champion}
-                          <Badge variant={match.gameResult === "Victory" ? "default" : "destructive"}>
+                          <Badge
+                            variant={match.gameResult === "Victory" ? "default" : "destructive"}
+                            className={match.gameResult === "Victory" ? "bg-green-600 text-white hover:bg-green-600" : ""}
+                          >
                             {match.gameResult}
                           </Badge>
                         </CardTitle>
