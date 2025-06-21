@@ -146,6 +146,17 @@ namespace backend // This should be your project's namespace
                 double teamImpactAvg = impacts.TeamImpact;
                 double yourImpactAvg = impacts.YourImpact;
 
+                // === Determine impact category to store in cache ===
+                bool youHigher = yourImpactAvg > teamImpactAvg;
+                string category;
+                if (gameResult == "Victory" && youHigher) category = "impactWins";
+                else if (gameResult == "Defeat" && !youHigher) category = "impactLosses";
+                else if (gameResult == "Victory") category = "guaranteedWins";
+                else category = "guaranteedLosses";
+
+                // Persist to lifetime impact cache (fire & forget)
+                _ = ImpactCache.AddOrUpdateCategoryAsync(matchId, category);
+
                 performanceData.Remove(impacts);
 
                 var matchSummary = new MatchSummary
@@ -194,6 +205,26 @@ namespace backend // This should be your project's namespace
         private int GetVisionScore(Participant participant, MatchDto match)
         {
             return match.Info.Participants.FirstOrDefault(p => p.ParticipantId == participant.ParticipantId)?.VisionScore ?? 0;
+        }
+
+        public string ClearPlayerCache()
+        {
+            bool success = PlayerCache.DeleteCacheFile();
+            return JsonSerializer.Serialize(new { success });
+        }
+
+        public string ClearImpactCache()
+        {
+            bool success = ImpactCache.DeleteCacheFile();
+            return JsonSerializer.Serialize(new { success });
+        }
+
+        public string ClearAllCaches()
+        {
+            bool p = PlayerCache.DeleteCacheFile();
+            bool i = ImpactCache.DeleteCacheFile();
+            bool u = UserCache.DeleteCacheFile();
+            return JsonSerializer.Serialize(new { success = p && i && u });
         }
     }
 }

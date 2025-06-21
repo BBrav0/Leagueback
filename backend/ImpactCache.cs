@@ -2,44 +2,39 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace backend
 {
     /// <summary>
-    /// Stores basic summoner information (puuid / riot id) in a non-expiring cache.
-    /// The file lives inside ./caches/user_cache.json next to the executable.
+    /// Persists lifetime impact categories for each match (impactWins, impactLosses, guaranteedWins, guaranteedLosses)
+    /// The cache file lives at ./caches/impact_cache.json next to the executable.
     /// </summary>
-    public static class UserCache
+    public static class ImpactCache
     {
         private static readonly string CacheFilePath = Path.Combine(
             AppDomain.CurrentDomain.BaseDirectory,
             "caches",
-            "user_cache.json");
+            "impact_cache.json");
 
         public class CacheData
         {
-            public string Puuid { get; set; } = string.Empty;
-            public string GameName { get; set; } = string.Empty;
-            public string TagLine { get; set; } = string.Empty;
+            // Key = matchId, Value = category string
+            public Dictionary<string, string> MatchCategories { get; set; } = new();
+            public DateTime LastUpdated { get; set; }
         }
 
-        public static async Task SaveCacheDataAsync(string puuid, string gameName, string tagLine)
+        private static async Task SaveCacheDataAsync(CacheData data)
         {
-            var data = new CacheData
-            {
-                Puuid = puuid,
-                GameName = gameName,
-                TagLine = tagLine
-            };
-
             // Ensure directory exists
             Directory.CreateDirectory(Path.GetDirectoryName(CacheFilePath)!);
 
+            data.LastUpdated = DateTime.UtcNow;
             var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
             await File.WriteAllTextAsync(CacheFilePath, json);
         }
 
-        public static async Task<CacheData?> LoadCacheDataAsync()
+        private static async Task<CacheData?> LoadCacheDataAsync()
         {
             try
             {
@@ -53,6 +48,17 @@ namespace backend
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Adds or updates a match category in the cache.
+        /// </summary>
+        public static async Task AddOrUpdateCategoryAsync(string matchId, string category)
+        {
+            var cache = await LoadCacheDataAsync() ?? new CacheData();
+
+            cache.MatchCategories[matchId] = category;
+            await SaveCacheDataAsync(cache);
         }
 
         public static bool DeleteCacheFile()

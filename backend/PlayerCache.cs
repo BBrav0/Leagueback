@@ -86,5 +86,21 @@ namespace backend
             var threshold = maxAge ?? TimeSpan.FromHours(24);
             return (DateTime.UtcNow - cacheData.LastUpdated) < threshold;
         }
+
+        public static bool DeleteCacheFile()
+        {
+            try
+            {
+                if (File.Exists(CacheFilePath))
+                {
+                    File.Delete(CacheFilePath);
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 } 
