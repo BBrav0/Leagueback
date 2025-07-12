@@ -42,7 +42,12 @@ serve(async (req) => {
     }
 
     // 2. If no path param, just return the key (used once by the desktop app)
-    return new Response(RIOT_API_KEY, { headers: { ...corsHeaders, 'Content-Type': 'text/plain' } })
+    if (!path) {
+      return new Response(
+        JSON.stringify({ error: 'A valid "path" parameter is required.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
   } catch (err) {
     return new Response(
       JSON.stringify({ error: err.message }),
