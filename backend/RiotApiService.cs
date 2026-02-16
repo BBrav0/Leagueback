@@ -12,37 +12,30 @@ namespace backend // Or "MyWpfApp"
     public class RiotApiService
     {
         private static readonly HttpClient _httpClient = new HttpClient();
-        private const string AMERICAS_URL = "https://americas.api.riotgames.com";
 
-        // The constructor no longer needs any UI components passed to it.
-        public RiotApiService(string apiKey)
+        // Cloudflare Worker proxy URL — no secret, safe to embed in source code.
+        private const string WORKER_URL = "https://riot-proxy.riot-proxy.workers.dev";
+
+        public RiotApiService()
         {
-            if (string.IsNullOrEmpty(apiKey))
-            {
-                throw new ArgumentNullException(nameof(apiKey), "Riot API key cannot be null or empty.");
-            }
-            
-            _httpClient.DefaultRequestHeaders.Clear();
-            _httpClient.DefaultRequestHeaders.Add("X-Riot-Token", apiKey);
+            // No API key needed — the Worker handles authentication with Riot.
         }
 
         public async Task<AccountDto?> GetAccountByRiotIdAsync(string gameName, string tagLine)
         {
             if (string.IsNullOrEmpty(gameName) || string.IsNullOrEmpty(tagLine))
             {
-                // Throw an exception instead of writing to a UI element.
                 throw new ArgumentException("Game name and tag line must be provided.");
             }
 
             try
             {
-                var url = $"{AMERICAS_URL}/riot/account/v1/accounts/by-riot-id/{gameName}/{tagLine}";
+                var url = $"{WORKER_URL}/api/account/{Uri.EscapeDataString(gameName)}/{Uri.EscapeDataString(tagLine)}";
                 var response = await _httpClient.GetAsync(url);
                 var content = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    // Throw a detailed exception on failure.
                     throw new HttpRequestException($"Failed to get account by Riot ID. Status: {response.StatusCode}, Response: {content}");
                 }
 
@@ -50,7 +43,6 @@ namespace backend // Or "MyWpfApp"
             }
             catch (Exception)
             {
-                // Re-throw the original exception to let the caller handle it.
                 throw;
             }
         }
@@ -68,13 +60,11 @@ namespace backend // Or "MyWpfApp"
 
             if (cacheValid && cache!.MatchIds.Count >= count)
             {
-                // We already have enough recent matches stored
                 return cache.MatchIds.Take(count).ToList();
             }
 
-            // Either cache is invalid or doesn't have enough matches – call Riot API but request ONLY 10 matches max
             const int ApiRequestCount = 10;
-            var url = $"{AMERICAS_URL}/lol/match/v5/matches/by-puuid/{puuid}/ids?type=ranked&start=0&count={ApiRequestCount}";
+            var url = $"{WORKER_URL}/api/matches/{Uri.EscapeDataString(puuid)}?type=ranked&count={ApiRequestCount}";
             var response = await _httpClient.GetAsync(url);
             var content = await response.Content.ReadAsStringAsync();
 
@@ -85,18 +75,15 @@ namespace backend // Or "MyWpfApp"
 
             var newMatchIds = JsonSerializer.Deserialize<List<string>>(content) ?? new List<string>();
 
-            // Prepare cache object
             if (cache == null || cache.Puuid != puuid)
             {
                 cache = new PlayerCache.CacheData { Puuid = puuid };
             }
 
-            // Merge lists ensuring newest→oldest order (API already returns newest first)
             cache.MatchIds = newMatchIds.Concat(cache.MatchIds).Distinct().ToList();
 
             await PlayerCache.SaveCacheDataAsync(cache);
 
-            // Return as many matches as requested (up to what we have)
             return cache.MatchIds.Take(count).ToList();
         }
 
@@ -114,7 +101,7 @@ namespace backend // Or "MyWpfApp"
                 return cachedMatch;
             }
 
-            var url = $"{AMERICAS_URL}/lol/match/v5/matches/{matchId}";
+            var url = $"{WORKER_URL}/api/match/{Uri.EscapeDataString(matchId)}";
             var response = await _httpClient.GetAsync(url);
             var content = await response.Content.ReadAsStringAsync();
 
@@ -153,7 +140,7 @@ namespace backend // Or "MyWpfApp"
                 return cachedTimeline;
             }
 
-            var url = $"{AMERICAS_URL}/lol/match/v5/matches/{matchId}/timeline";
+            var url = $"{WORKER_URL}/api/match/{Uri.EscapeDataString(matchId)}/timeline";
             var response = await _httpClient.GetAsync(url);
             var content = await response.Content.ReadAsStringAsync();
 
