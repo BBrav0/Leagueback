@@ -1,3 +1,6 @@
+# THIS REPOSITORY IS A DEPRICATED DESKTOP APP. THE NEW LEAGUEBACK IS A WEBAPP, REPOSITORY HERE:
+https://github.com/BBrav0/Leagueback-WEBAPP
+
 # Leagueback
 
 > Quantify your personal impact in every League of Legends match.
