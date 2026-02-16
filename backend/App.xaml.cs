@@ -9,7 +9,7 @@ namespace backend
 {
     public partial class App : Application
     {
-        private IHost _host;
+        private IHost _host = null!;
 
         // This method runs once when your application first starts.
         protected override void OnStartup(StartupEventArgs e)

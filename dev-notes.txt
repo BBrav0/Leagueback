@@ -13,3 +13,4 @@ IN MAINWINDOW.XAML.CS
 
 more todo:
 vision score difference, cs diffrence, vs double for supp and jung
+leave out remakes in match history
